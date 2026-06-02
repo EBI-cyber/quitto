@@ -1,8 +1,7 @@
 import { HashRouter, Routes, Route } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { AuthProvider, useAuth } from './lib/auth'
-import { syncAll } from './lib/cloud'
-import { allBelege } from './lib/db'
+import { syncAll, pullBelege } from './lib/cloud'
 import Nav from './components/Nav'
 import Home from './screens/Home'
 import EinnahmeFlow from './screens/EinnahmeFlow'
@@ -30,10 +29,15 @@ function Shell() {
     if (!user) { setRole(null); return }
     ;(async () => {
       try { await syncAll() } catch { /* offline */ }
-      const all = await allBelege()
       const email = (user.email || '').toLowerCase()
-      const ownsAny = all.some((b) => b.owner && b.owner === user.id)
-      const isPayee = !ownsAny && all.length > 0 && all.some((b) => (b.payeeEmail || '').toLowerCase() === email)
+      let isPayee = false
+      try {
+        const cloud = await pullBelege()
+        if (cloud.length) {
+          const ownsAny = cloud.some((b) => b.owner === user.id)
+          isPayee = !ownsAny && cloud.some((b) => (b.payeeEmail || '').toLowerCase() === email)
+        }
+      } catch { /* im Zweifel Owner */ }
       if (active) setRole(isPayee ? 'payee' : 'owner')
     })()
     return () => { active = false }

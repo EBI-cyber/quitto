@@ -78,7 +78,7 @@ export default function AusgabeFlow() {
       try { const r = await pushBeleg(beleg); if (r.ok) await markSynced(beleg.id) } catch { /* lokal */ }
       if (!withSignature && supabase) {
         try {
-          await supabase.functions.invoke('notify-payee', {
+          await supabase.functions.invoke('swift-endpoint', {
             body: {
               payee_email: email.trim().toLowerCase(),
               title: 'Neue Auszahlung wartet',

@@ -14,6 +14,7 @@ export default function AusgabeFlow() {
   const s = useMemo(() => loadSettings(), [])
   const [step, setStep] = useState('form')
   const [name, setName] = useState('')
+  const [email, setEmail] = useState('')
   const [items, setItems] = useState(() =>
     s.services?.length
       ? [{ label: s.services[0].label, qty: 1, price: Number(s.services[0].price) || 0 }]
@@ -42,7 +43,8 @@ export default function AusgabeFlow() {
       const beleg = await addBeleg({
         direction: 'ausgabe', number, date: new Date().toISOString(),
         items: cleanItems, total: cleanItems.reduce((a, i) => a + i.price * i.qty, 0),
-        customer: { name, email: '' },
+        customer: { name, email: email.trim() },
+        payeeEmail: email.trim().toLowerCase(),
         signatureDataUrl: sigRef.current.toDataURL(),
         signerName: signerName || name, paymentMethod: 'bar',
         taxMode: s.kleinunternehmer ? 'kleinunternehmer' : 'ust', vatRate: s.vatRate,
@@ -72,11 +74,12 @@ export default function AusgabeFlow() {
         <motion.main initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex-1 px-5 space-y-3">
           <div className="glass rounded-3xl p-4">
             <div className="text-white/50 text-xs mb-2">Empfänger (Putzkraft)</div>
-            <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Name der Putzkraft" className={inputCls} />
+            <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Name der Putzkraft" className={inputCls + ' mb-2'} />
+            <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" placeholder="E-Mail (für ihren Zugang, optional)" className={inputCls} />
             {(s.payees || []).length > 0 && (
               <div className="flex flex-wrap gap-2 mt-2">
                 {s.payees.map((p, i) => (
-                  <button key={i} onClick={() => setName(p.name)}
+                  <button key={i} onClick={() => { setName(p.name); if (p.email) setEmail(p.email) }}
                     className="text-sm rounded-full px-3 py-1 border border-white/10 bg-white/5 active:scale-95 transition">
                     {p.name}
                   </button>

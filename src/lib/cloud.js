@@ -17,6 +17,7 @@ function toRow(b) {
     vat_rate: b.vatRate,
     prev_hash: b.prevHash,
     hash: b.hash,
+    payee_email: b.payeeEmail || null,
     device: navigator.userAgent,
     created_at: b.createdAt,
   }
@@ -39,6 +40,8 @@ export function fromRow(r) {
     vatRate: r.vat_rate,
     prevHash: r.prev_hash,
     hash: r.hash,
+    payeeEmail: r.payee_email,
+    owner: r.owner,
     createdAt: r.created_at,
   }
 }

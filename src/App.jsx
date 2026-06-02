@@ -1,7 +1,8 @@
 import { HashRouter, Routes, Route } from 'react-router-dom'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { AuthProvider, useAuth } from './lib/auth'
 import { syncAll } from './lib/cloud'
+import { allBelege } from './lib/db'
 import Nav from './components/Nav'
 import Home from './screens/Home'
 import EinnahmeFlow from './screens/EinnahmeFlow'
@@ -10,6 +11,7 @@ import Kassenbuch from './screens/Kassenbuch'
 import Cockpit from './screens/Cockpit'
 import SettingsScreen from './screens/SettingsScreen'
 import Login from './screens/Login'
+import MeineZahlungen from './screens/MeineZahlungen'
 
 function Splash() {
   return (
@@ -21,10 +23,26 @@ function Splash() {
 
 function Shell() {
   const { loading, user, isCloudReady } = useAuth()
-  useEffect(() => { if (user) syncAll() }, [user])
+  const [role, setRole] = useState(null) // 'owner' | 'payee'
+
+  useEffect(() => {
+    let active = true
+    if (!user) { setRole(null); return }
+    ;(async () => {
+      try { await syncAll() } catch { /* offline */ }
+      const all = await allBelege()
+      const email = (user.email || '').toLowerCase()
+      const ownsAny = all.some((b) => b.owner && b.owner === user.id)
+      const isPayee = !ownsAny && all.length > 0 && all.some((b) => (b.payeeEmail || '').toLowerCase() === email)
+      if (active) setRole(isPayee ? 'payee' : 'owner')
+    })()
+    return () => { active = false }
+  }, [user])
 
   if (loading) return <Splash />
   if (isCloudReady && !user) return <Login />
+  if (user && role === null) return <Splash />
+  if (role === 'payee') return <MeineZahlungen />
 
   return (
     <div className="min-h-[100dvh] flex flex-col max-w-md mx-auto">

@@ -115,10 +115,14 @@ export default function SettingsScreen() {
         <div className="text-white/60 font-semibold mb-2">Putzkräfte (Schnellauswahl)</div>
         <div className="text-white/35 text-xs mb-3">Erscheinen im Ausgabe-Flow als Chips.</div>
         {(s.payees || []).map((p, i) => (
-          <div key={i} className="flex gap-2 items-center mb-2">
-            <input value={p.name ?? ''} onChange={(e) => updPayee(i, 'name', e.target.value)} placeholder="Name"
-              className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3 py-2 outline-none focus:border-neon" />
-            <button onClick={() => removePayee(i)} className="text-white/40 px-1 text-lg leading-none">✕</button>
+          <div key={i} className="mb-3 bg-white/5 border border-white/10 rounded-xl p-2">
+            <div className="flex gap-2 items-center">
+              <input value={p.name ?? ''} onChange={(e) => updPayee(i, 'name', e.target.value)} placeholder="Name"
+                className="flex-1 bg-transparent outline-none px-1 py-1" />
+              <button onClick={() => removePayee(i)} className="text-white/40 px-1 text-lg leading-none">✕</button>
+            </div>
+            <input value={p.email ?? ''} onChange={(e) => updPayee(i, 'email', e.target.value)} type="email" placeholder="E-Mail (für ihren Zugang)"
+              className="w-full mt-1 bg-white/5 rounded-lg px-2 py-1 text-sm outline-none" />
           </div>
         ))}
         <button onClick={addPayee} className="text-sm text-aqua mt-1">+ Putzkraft hinzufügen</button>

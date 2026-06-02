@@ -5,6 +5,7 @@ import { allBelege, signBelegLocal } from '../lib/db'
 import { signBelegRemote, syncAll } from '../lib/cloud'
 import { euro, dmyhm } from '../lib/format'
 import SignaturePad from '../components/SignaturePad'
+import { enablePush, pushStatus, pushSupported } from '../lib/push'
 
 export default function MeineZahlungen() {
   const { user, signOut } = useAuth()
@@ -14,8 +15,16 @@ export default function MeineZahlungen() {
   const [busy, setBusy] = useState(false)
   const sigRef = useRef(null)
 
+  const [pushState, setPushState] = useState('off')
+
   const load = () => allBelege().then((list) => setItems(list.filter((b) => b.direction === 'ausgabe')))
   useEffect(() => { (async () => { try { await syncAll() } catch {} ; load() })() }, [])
+  useEffect(() => { pushStatus().then(setPushState) }, [])
+
+  async function turnOnPush() {
+    try { await enablePush(user?.email); setPushState('on') }
+    catch (e) { alert((e && e.message) || 'Konnte Benachrichtigungen nicht aktivieren.') }
+  }
 
   const pending = items.filter((b) => b.status === 'pending_signature')
   const signed = items.filter((b) => b.status !== 'pending_signature')
@@ -66,6 +75,13 @@ export default function MeineZahlungen() {
         <button onClick={signOut} className="text-aqua text-sm">Abmelden</button>
       </div>
       <div className="text-white/45 text-sm mb-5">{user?.email}</div>
+
+      {pushSupported() && pushState !== 'on' && (
+        <button onClick={turnOnPush}
+          className="w-full glass rounded-2xl py-3 mb-4 text-aqua font-semibold active:scale-[0.99] transition">
+          🔔 Benachrichtigungen aktivieren
+        </button>
+      )}
 
       {pending.length > 0 && (
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}

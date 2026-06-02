@@ -5,6 +5,7 @@ import SignaturePad from '../components/SignaturePad'
 import { loadSettings } from '../lib/settings'
 import { nextNumber, addBeleg, markSynced } from '../lib/db'
 import { pushBeleg } from '../lib/cloud'
+import { supabase } from '../lib/supabase'
 import { buildInvoicePdf } from '../lib/pdf'
 import { sharePdf } from '../lib/share'
 import { euro } from '../lib/format'
@@ -54,6 +55,18 @@ export default function AusgabeFlow() {
         status: withSignature ? 'signed' : 'pending_signature',
       })
       try { const r = await pushBeleg(beleg); if (r.ok) await markSynced(beleg.id) } catch { /* lokal */ }
+      if (!withSignature && supabase) {
+        try {
+          await supabase.functions.invoke('notify-payee', {
+            body: {
+              payee_email: email.trim().toLowerCase(),
+              title: 'Neue Auszahlung wartet',
+              body: `Bitte ${euro(beleg.total)} bestätigen und unterschreiben.`,
+              url: '/quitto/',
+            },
+          })
+        } catch { /* Push optional */ }
+      }
       setSaved(beleg); setStep('done')
     } finally { setBusy(false) }
   }

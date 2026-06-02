@@ -17,8 +17,24 @@ export default function MeineZahlungen() {
 
   const [pushState, setPushState] = useState('off')
 
-  const load = () => allBelege().then((list) => setItems(list.filter((b) => b.direction === 'ausgabe')))
-  useEffect(() => { (async () => { try { await syncAll() } catch {} ; load() })() }, [])
+  const load = async () => {
+    const list = (await allBelege()).filter((b) => b.direction === 'ausgabe')
+    setItems(list)
+    return list
+  }
+  const openFromHash = (list) => {
+    const m = (window.location.hash || '').match(/sign=([a-f0-9]+)/i)
+    if (m) {
+      const b = list.find((x) => x.token === m[1] && x.status === 'pending_signature')
+      if (b) setSigning(b)
+    }
+  }
+  useEffect(() => { (async () => { try { await syncAll() } catch {} ; const l = await load(); openFromHash(l) })() }, [])
+  useEffect(() => {
+    const onHash = async () => { const l = await load(); openFromHash(l) }
+    window.addEventListener('hashchange', onHash)
+    return () => window.removeEventListener('hashchange', onHash)
+  }, [])
   useEffect(() => { pushStatus().then(setPushState) }, [])
 
   async function turnOnPush() {
@@ -40,6 +56,7 @@ export default function MeineZahlungen() {
       if (!r.ok) { alert('Konnte nicht speichern (online?). Bitte erneut versuchen.'); return }
       await signBelegLocal(signing.token, sig, nm)
       setSigning(null); setSignerName('')
+      if (window.location.hash) window.location.hash = ''
       await load()
     } finally { setBusy(false) }
   }

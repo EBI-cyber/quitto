@@ -75,7 +75,7 @@ export default function AusgabeFlow() {
               payee_email: email.trim().toLowerCase(),
               title: 'Neue Auszahlung wartet',
               body: `Bitte ${euro(beleg.total)} bestätigen und unterschreiben.`,
-              url: '/quitto/',
+              url: '/quitto/#sign=' + beleg.token,
             },
           })
         } catch { /* Push optional */ }

@@ -2,7 +2,7 @@ import { useState, useRef, useMemo } from 'react'
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import SignaturePad from '../components/SignaturePad'
-import { loadSettings } from '../lib/settings'
+import { loadSettings, saveSettings } from '../lib/settings'
 import { nextNumber, addBeleg, markSynced } from '../lib/db'
 import { pushBeleg } from '../lib/cloud'
 import { supabase } from '../lib/supabase'
@@ -54,6 +54,19 @@ export default function AusgabeFlow() {
         taxMode: s.kleinunternehmer ? 'kleinunternehmer' : 'ust', vatRate: s.vatRate,
         status: withSignature ? 'signed' : 'pending_signature',
       })
+      // Putzkraft automatisch merken (erscheint nächstes Mal als Chip)
+      if (name.trim()) {
+        const cur = loadSettings()
+        const list = cur.payees || []
+        const idx = list.findIndex((p) => (p.name || '').toLowerCase() === name.trim().toLowerCase())
+        if (idx === -1) {
+          cur.payees = [...list, { name: name.trim(), email: email.trim() }]
+          saveSettings(cur)
+        } else if (email.trim() && !list[idx].email) {
+          cur.payees = list.map((p, i) => (i === idx ? { ...p, email: email.trim() } : p))
+          saveSettings(cur)
+        }
+      }
       try { const r = await pushBeleg(beleg); if (r.ok) await markSynced(beleg.id) } catch { /* lokal */ }
       if (!withSignature && supabase) {
         try {

@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { HashRouter, Routes, Route } from 'react-router-dom'
 import { useEffect } from 'react'
 import { AuthProvider, useAuth } from './lib/auth'
 import { syncAll } from './lib/cloud'
@@ -44,9 +44,9 @@ function Shell() {
 export default function App() {
   return (
     <AuthProvider>
-      <BrowserRouter>
+      <HashRouter>
         <Shell />
-      </BrowserRouter>
+      </HashRouter>
     </AuthProvider>
   )
 }

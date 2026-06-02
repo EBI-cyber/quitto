@@ -11,6 +11,7 @@ export const defaultSettings = {
   email: '',
   phone: '',
   iban: '',
+  logoDataUrl: '',
   kleinunternehmer: true, // §19 UStG
   vatRate: 19,
   invoicePrefix: 'R',

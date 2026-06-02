@@ -8,6 +8,18 @@ export function buildInvoicePdf(beleg, s) {
   const RIGHT = 420
   let y = 60
 
+  // Logo (optional, Seitenverhältnis bleibt erhalten)
+  if (s.logoDataUrl) {
+    try {
+      const p = doc.getImageProperties(s.logoDataUrl)
+      const maxW = 150, maxH = 55
+      let w = maxW, h = (p.height / p.width) * w
+      if (h > maxH) { h = maxH; w = (p.width / p.height) * h }
+      doc.addImage(s.logoDataUrl, p.fileType || 'PNG', M, 38, w, h)
+      y = 38 + h + 18
+    } catch { /* ungueltiges Logo ignorieren */ }
+  }
+
   doc.setFont('helvetica', 'bold').setFontSize(20)
   doc.text(s.businessName || 'Rechnung', M, y)
 
@@ -56,7 +68,7 @@ export function buildInvoicePdf(beleg, s) {
   y += 4; doc.line(M, y, RIGHT + 60, y); y += 22
 
   doc.setFont('helvetica', 'bold').setFontSize(12)
-  doc.text('Gesamtbetrag:', RIGHT - 60, y)
+  doc.text('Gesamtbetrag:', RIGHT - 150, y)
   doc.text(euroPdf(beleg.total), RIGHT + 60, y, { align: 'right' })
 
   doc.setFont('helvetica', 'normal').setFontSize(9).setTextColor(90)

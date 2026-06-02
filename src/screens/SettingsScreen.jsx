@@ -26,6 +26,13 @@ export default function SettingsScreen() {
   const updService = (i, k, v) => setS((p) => ({ ...p, services: p.services.map((sv, idx) => (idx === i ? { ...sv, [k]: v } : sv)) }))
   const addService = () => setS((p) => ({ ...p, services: [...(p.services || []), { label: '', price: 0 }] }))
   const removeService = (i) => setS((p) => ({ ...p, services: p.services.filter((_, idx) => idx !== i) }))
+  const onLogo = (e) => {
+    const f = e.target.files && e.target.files[0]
+    if (!f) return
+    const reader = new FileReader()
+    reader.onload = () => upd('logoDataUrl', reader.result)
+    reader.readAsDataURL(f)
+  }
   const save = () => {
     saveSettings(s)
     setSavedMsg(true)
@@ -59,6 +66,21 @@ export default function SettingsScreen() {
         <Field label="E-Mail" value={s.email} onChange={(v) => upd('email', v)} />
         <Field label="Telefon" value={s.phone} onChange={(v) => upd('phone', v)} />
         <Field label="IBAN" value={s.iban} onChange={(v) => upd('iban', v)} />
+      </div>
+
+      <div className="glass rounded-3xl p-4 mt-3">
+        <div className="text-white/60 font-semibold mb-2">Logo (für die Rechnung)</div>
+        {s.logoDataUrl ? (
+          <div className="flex items-center gap-3">
+            <img src={s.logoDataUrl} alt="Logo" className="h-14 rounded-lg bg-white/10 p-1 object-contain" />
+            <button onClick={() => upd('logoDataUrl', '')} className="text-aqua text-sm">entfernen</button>
+          </div>
+        ) : (
+          <label className="inline-block text-sm rounded-xl px-3 py-2 border border-white/10 bg-white/5 cursor-pointer">
+            Logo hochladen
+            <input type="file" accept="image/*" onChange={onLogo} className="hidden" />
+          </label>
+        )}
       </div>
 
       <div className="glass rounded-3xl p-4 mt-3">

@@ -15,6 +15,8 @@ export const defaultSettings = {
   kleinunternehmer: true, // §19 UStG
   vatRate: 19,
   invoicePrefix: 'R',
+  expensePrefix: 'A',
+  payees: [],
   defaultService: 'Wohnung gereinigt',
   defaultPrice: 50,
   surchargeLabel: 'Nachtrag starke Verschmutzung',

@@ -5,6 +5,7 @@ import { syncAll } from './lib/cloud'
 import Nav from './components/Nav'
 import Home from './screens/Home'
 import EinnahmeFlow from './screens/EinnahmeFlow'
+import AusgabeFlow from './screens/AusgabeFlow'
 import Kassenbuch from './screens/Kassenbuch'
 import Cockpit from './screens/Cockpit'
 import SettingsScreen from './screens/SettingsScreen'
@@ -31,6 +32,7 @@ function Shell() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/einnahme" element={<EinnahmeFlow />} />
+          <Route path="/ausgabe" element={<AusgabeFlow />} />
           <Route path="/kassenbuch" element={<Kassenbuch />} />
           <Route path="/cockpit" element={<Cockpit />} />
           <Route path="/einstellungen" element={<SettingsScreen />} />

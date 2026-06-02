@@ -33,6 +33,9 @@ export default function SettingsScreen() {
     reader.onload = () => upd('logoDataUrl', reader.result)
     reader.readAsDataURL(f)
   }
+  const updPayee = (i, k, v) => setS((p) => ({ ...p, payees: (p.payees || []).map((pv, idx) => (idx === i ? { ...pv, [k]: v } : pv)) }))
+  const addPayee = () => setS((p) => ({ ...p, payees: [...(p.payees || []), { name: '' }] }))
+  const removePayee = (i) => setS((p) => ({ ...p, payees: (p.payees || []).filter((_, idx) => idx !== i) }))
   const save = () => {
     saveSettings(s)
     setSavedMsg(true)
@@ -109,7 +112,23 @@ export default function SettingsScreen() {
       </div>
 
       <div className="glass rounded-3xl p-4 mt-3">
-        <Field label="Rechnungs-Präfix" value={s.invoicePrefix} onChange={(v) => upd('invoicePrefix', v)} />
+        <div className="text-white/60 font-semibold mb-2">Putzkräfte (Schnellauswahl)</div>
+        <div className="text-white/35 text-xs mb-3">Erscheinen im Ausgabe-Flow als Chips.</div>
+        {(s.payees || []).map((p, i) => (
+          <div key={i} className="flex gap-2 items-center mb-2">
+            <input value={p.name ?? ''} onChange={(e) => updPayee(i, 'name', e.target.value)} placeholder="Name"
+              className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3 py-2 outline-none focus:border-neon" />
+            <button onClick={() => removePayee(i)} className="text-white/40 px-1 text-lg leading-none">✕</button>
+          </div>
+        ))}
+        <button onClick={addPayee} className="text-sm text-aqua mt-1">+ Putzkraft hinzufügen</button>
+      </div>
+
+      <div className="glass rounded-3xl p-4 mt-3">
+        <div className="grid grid-cols-2 gap-2">
+          <Field label="Präfix Einnahme-Nr." value={s.invoicePrefix} onChange={(v) => upd('invoicePrefix', v)} />
+          <Field label="Präfix Ausgabe-Nr." value={s.expensePrefix} onChange={(v) => upd('expensePrefix', v)} />
+        </div>
       </div>
 
       <button onClick={save}

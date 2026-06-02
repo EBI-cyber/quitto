@@ -45,7 +45,7 @@ export default function Home() {
           <div className="text-white/50 text-sm mt-1">Kunde zahlt bar → Quittung + Rechnung + Unterschrift</div>
         </motion.button>
 
-        <motion.button {...fade(0.18)} onClick={() => alert('Ausgabe-Flow kommt als Nächstes 🙂')}
+        <motion.button {...fade(0.18)} onClick={() => nav('/ausgabe')}
           className="glass w-full rounded-4xl p-6 text-left active:scale-[0.98] transition-transform">
           <div className="text-4xl">🤝</div>
           <div className="text-xl font-bold mt-3">Ausgabe · Bargeld weitergeben</div>

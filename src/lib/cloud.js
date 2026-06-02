@@ -18,6 +18,7 @@ function toRow(b) {
     prev_hash: b.prevHash,
     hash: b.hash,
     payee_email: b.payeeEmail || null,
+    status: b.status || 'signed',
     device: navigator.userAgent,
     created_at: b.createdAt,
   }
@@ -42,8 +43,19 @@ export function fromRow(r) {
     hash: r.hash,
     payeeEmail: r.payee_email,
     owner: r.owner,
+    status: r.status,
     createdAt: r.created_at,
   }
+}
+
+// Remote-Unterschrift: Putzkraft trägt Signatur an ihrem Beleg ein (RLS erlaubt nur eigene, pending)
+export async function signBelegRemote(token, signatureDataUrl, signerName) {
+  if (!(await hasSession())) return { ok: false, reason: 'no-session' }
+  const { error } = await supabase
+    .from('belege')
+    .update({ signature_data_url: signatureDataUrl, signer_name: signerName, status: 'signed' })
+    .eq('token', token)
+  return error ? { ok: false, error } : { ok: true }
 }
 
 async function hasSession() {

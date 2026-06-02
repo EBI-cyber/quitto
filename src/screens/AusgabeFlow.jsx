@@ -15,6 +15,7 @@ export default function AusgabeFlow() {
   const [step, setStep] = useState('form')
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
+  const [signOn, setSignOn] = useState('me') // 'me' = jetzt hier | 'her' = Putzkraft unterschreibt selbst
   const [items, setItems] = useState(() =>
     s.services?.length
       ? [{ label: s.services[0].label, qty: 1, price: Number(s.services[0].price) || 0 }]
@@ -31,33 +32,47 @@ export default function AusgabeFlow() {
   const updItem = (idx, key, val) => setItems((p) => p.map((it, i) => (i === idx ? { ...it, [key]: val } : it)))
   const removeItem = (idx) => setItems((p) => p.filter((_, i) => i !== idx))
 
-  async function finalize() {
-    if (!sigRef.current || sigRef.current.isEmpty()) { alert('Bitte unterschreiben lassen.'); return }
-    const cleanItems = items
-      .filter((it) => String(it.label).trim())
+  const cleanItems = () =>
+    items.filter((it) => String(it.label).trim())
       .map((it) => ({ label: String(it.label).trim(), qty: Number(it.qty) || 1, price: Number(it.price) || 0 }))
-    if (!cleanItems.length) { alert('Bitte mindestens eine Position erfassen.'); return }
+
+  async function createBeleg(withSignature) {
+    const ci = cleanItems()
+    if (!ci.length) { alert('Bitte mindestens eine Position erfassen.'); return }
     setBusy(true)
     try {
       const number = await nextNumber(s.expensePrefix || 'A', 'ausgabe')
       const beleg = await addBeleg({
         direction: 'ausgabe', number, date: new Date().toISOString(),
-        items: cleanItems, total: cleanItems.reduce((a, i) => a + i.price * i.qty, 0),
+        items: ci, total: ci.reduce((a, i) => a + i.price * i.qty, 0),
         customer: { name, email: email.trim() },
         payeeEmail: email.trim().toLowerCase(),
-        signatureDataUrl: sigRef.current.toDataURL(),
-        signerName: signerName || name, paymentMethod: 'bar',
+        signatureDataUrl: withSignature ? sigRef.current.toDataURL() : null,
+        signerName: withSignature ? (signerName || name) : '',
+        paymentMethod: 'bar',
         taxMode: s.kleinunternehmer ? 'kleinunternehmer' : 'ust', vatRate: s.vatRate,
+        status: withSignature ? 'signed' : 'pending_signature',
       })
       try { const r = await pushBeleg(beleg); if (r.ok) await markSynced(beleg.id) } catch { /* lokal */ }
       setSaved(beleg); setStep('done')
     } finally { setBusy(false) }
   }
 
+  function finalizeSelf() {
+    if (!sigRef.current || sigRef.current.isEmpty()) { alert('Bitte unterschreiben lassen.'); return }
+    createBeleg(true)
+  }
+  function sendRemote() {
+    if (!email.trim()) { alert('Für die Unterschrift auf ihrem Handy bitte die E-Mail der Putzkraft angeben.'); return }
+    createBeleg(false)
+  }
+
   async function doShare() { await sharePdf(buildInvoicePdf(saved, s), saved) }
 
   const inputCls = 'w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 outline-none focus:border-neon'
-  const canContinue = name.trim() && total > 0 && items.some((it) => String(it.label).trim())
+  const baseValid = name.trim() && total > 0 && items.some((it) => String(it.label).trim())
+  const tab = (active) =>
+    'rounded-2xl p-3 text-left border transition ' + (active ? 'border-neon bg-neon/15' : 'border-white/10 bg-white/5')
 
   return (
     <div className="min-h-[100dvh] flex flex-col">
@@ -75,7 +90,7 @@ export default function AusgabeFlow() {
           <div className="glass rounded-3xl p-4">
             <div className="text-white/50 text-xs mb-2">Empfänger (Putzkraft)</div>
             <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Name der Putzkraft" className={inputCls + ' mb-2'} />
-            <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" placeholder="E-Mail (für ihren Zugang, optional)" className={inputCls} />
+            <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" placeholder="E-Mail (für Zugang & Unterschrift, optional)" className={inputCls} />
             {(s.payees || []).length > 0 && (
               <div className="flex flex-wrap gap-2 mt-2">
                 {s.payees.map((p, i) => (
@@ -84,6 +99,27 @@ export default function AusgabeFlow() {
                     {p.name}
                   </button>
                 ))}
+              </div>
+            )}
+          </div>
+
+          <div className="glass rounded-3xl p-4">
+            <div className="text-white/50 text-xs mb-2">Wer unterschreibt?</div>
+            <div className="grid grid-cols-2 gap-2">
+              <button onClick={() => setSignOn('me')} className={tab(signOn === 'me')}>
+                <div className="text-xl">📱</div>
+                <div className="font-semibold text-sm mt-1">Mein Handy</div>
+                <div className="text-white/45 text-xs">jetzt unterschreiben</div>
+              </button>
+              <button onClick={() => setSignOn('her')} className={tab(signOn === 'her')}>
+                <div className="text-xl">👩‍🔧</div>
+                <div className="font-semibold text-sm mt-1">Ihr Handy</div>
+                <div className="text-white/45 text-xs">sie unterschreibt selbst</div>
+              </button>
+            </div>
+            {signOn === 'her' && (
+              <div className="text-white/40 text-xs mt-2">
+                Der Beleg erscheint in ihrer App unter „Zu unterschreiben". (E-Mail oben muss gesetzt sein.)
               </div>
             )}
           </div>
@@ -145,28 +181,43 @@ export default function AusgabeFlow() {
       {step === 'done' && saved && (
         <motion.main initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }}
           className="flex-1 px-6 flex flex-col items-center justify-center text-center">
-          <div className="text-6xl mb-3">🤝</div>
-          <div className="text-2xl font-bold">Ausgezahlt!</div>
-          <div className="text-white/50 mt-1">Beleg <b>{saved.number}</b> · {euro(saved.total)}</div>
-          <div className="text-white/30 text-xs mt-1">Token {saved.token.slice(0, 12)} · manipulationssicher</div>
-          <button onClick={doShare} className="w-full mt-6 rounded-2xl py-3 font-bold bg-gradient-to-r from-neon to-aqua text-ink active:scale-[0.98] transition">
-            Quittung teilen / senden
-          </button>
+          {saved.status === 'pending_signature' ? (
+            <>
+              <div className="text-6xl mb-3">📤</div>
+              <div className="text-2xl font-bold">An Putzkraft gesendet</div>
+              <div className="text-white/50 mt-1">{saved.customer?.name} unterschreibt in ihrer App.</div>
+              <div className="text-white/40 text-sm mt-1">Beleg <b>{saved.number}</b> · {euro(saved.total)} · wartet auf Unterschrift</div>
+            </>
+          ) : (
+            <>
+              <div className="text-6xl mb-3">🤝</div>
+              <div className="text-2xl font-bold">Ausgezahlt!</div>
+              <div className="text-white/50 mt-1">Beleg <b>{saved.number}</b> · {euro(saved.total)}</div>
+              <button onClick={doShare} className="w-full mt-6 rounded-2xl py-3 font-bold bg-gradient-to-r from-neon to-aqua text-ink active:scale-[0.98] transition">
+                Quittung teilen / senden
+              </button>
+            </>
+          )}
           <button onClick={() => nav('/')} className="w-full mt-2 rounded-2xl py-3 glass">Fertig</button>
         </motion.main>
       )}
 
       {step !== 'done' && (
         <div className="p-4">
-          {step === 'form' ? (
-            <button disabled={!canContinue} onClick={() => setStep('sign')}
+          {step === 'sign' ? (
+            <button disabled={busy} onClick={finalizeSelf}
+              className="w-full rounded-2xl py-4 font-bold bg-gradient-to-r from-neon to-aqua text-ink disabled:opacity-40 active:scale-[0.98] transition">
+              {busy ? 'Speichere…' : 'Bargeld ausgezahlt & quittieren'}
+            </button>
+          ) : signOn === 'me' ? (
+            <button disabled={!baseValid} onClick={() => setStep('sign')}
               className="w-full rounded-2xl py-4 font-bold bg-gradient-to-r from-neon to-aqua text-ink disabled:opacity-40 active:scale-[0.98] transition">
               Weiter zur Unterschrift
             </button>
           ) : (
-            <button disabled={busy} onClick={finalize}
+            <button disabled={!baseValid || !email.trim() || busy} onClick={sendRemote}
               className="w-full rounded-2xl py-4 font-bold bg-gradient-to-r from-neon to-aqua text-ink disabled:opacity-40 active:scale-[0.98] transition">
-              {busy ? 'Speichere…' : 'Bargeld ausgezahlt & quittieren'}
+              {busy ? 'Sende…' : 'An Putzkraft senden →'}
             </button>
           )}
         </div>

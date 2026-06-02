@@ -6,7 +6,6 @@ db.version(1).stores({
   belege: '++id, number, token, direction, createdAt, hash',
 })
 
-// Fortlaufende, lückenlose Nummer pro Richtung & Jahr
 export async function nextNumber(prefix, direction) {
   const year = new Date().getFullYear()
   const count = await db.belege.where('direction').equals(direction).count()
@@ -19,13 +18,30 @@ async function lastHash() {
   return last?.hash || 'GENESIS'
 }
 
-// Fügt einen Beleg unveränderbar mit Hash-Kette hinzu (jeder Beleg referenziert den vorherigen Hash)
+// Nur die unveränderlichen Finanzdaten fließen in die Hash-Kette.
+// Signatur & Status können später (Remote-Unterschrift) ergänzt werden,
+// ohne die Manipulationssicherheit der Kette zu brechen.
+function hashPayload(b, prevHash) {
+  return JSON.stringify({
+    number: b.number,
+    token: b.token,
+    direction: b.direction,
+    date: b.date,
+    items: b.items,
+    total: b.total,
+    customer: b.customer,
+    payeeEmail: b.payeeEmail ?? null,
+    createdAt: b.createdAt,
+    prevHash,
+  })
+}
+
 export async function addBeleg(beleg) {
   const prevHash = await lastHash()
   const token = randomToken()
   const createdAt = new Date().toISOString()
-  const core = { ...beleg, token, createdAt, prevHash }
-  const hash = await sha256(JSON.stringify(core))
+  const core = { ...beleg, token, createdAt, prevHash, status: beleg.status || 'signed' }
+  const hash = await sha256(hashPayload(core, prevHash))
   const id = await db.belege.add({ ...core, hash, synced: 0 })
   return { id, ...core, hash }
 }
@@ -44,25 +60,31 @@ export async function markSynced(id) {
   await db.belege.update(id, { synced: 1 })
 }
 
-// Belege aus der Cloud lokal einspielen (Dedup über token)
+// Belege aus der Cloud lokal einspielen bzw. aktualisieren (Dedup/Update über token)
 export async function upsertFromCloud(list) {
   for (const b of list) {
-    const exists = await db.belege.where('token').equals(b.token).count()
-    if (!exists) await db.belege.add({ ...b, synced: 1 })
+    const ex = await db.belege.where('token').equals(b.token).first()
+    if (ex) await db.belege.update(ex.id, { ...b, synced: 1 })
+    else await db.belege.add({ ...b, synced: 1 })
   }
 }
 
-// Prüft die Integrität der Kette (für Cockpit/Audit)
+// Nachträgliche (Remote-)Unterschrift lokal eintragen
+export async function signBelegLocal(token, signatureDataUrl, signerName) {
+  const ex = await db.belege.where('token').equals(token).first()
+  if (ex) await db.belege.update(ex.id, { signatureDataUrl, signerName, status: 'signed' })
+}
+
+// Integrität der Kette prüfen (Cockpit/Audit)
 export async function verifyChain() {
   const items = await db.belege.orderBy('id').toArray()
   let prev = 'GENESIS'
   for (const it of items) {
-    const { id, hash, synced, ...core } = it
-    const expect = await sha256(JSON.stringify({ ...core, prevHash: prev }))
-    if (it.prevHash !== prev || expect !== hash) {
+    const expect = await sha256(hashPayload(it, prev))
+    if (it.prevHash !== prev || expect !== it.hash) {
       return { ok: false, brokenAt: it.number }
     }
-    prev = hash
+    prev = it.hash
   }
   return { ok: true, count: items.length }
 }

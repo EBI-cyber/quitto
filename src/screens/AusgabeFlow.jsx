@@ -16,6 +16,11 @@ export default function AusgabeFlow() {
   const [step, setStep] = useState('form')
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
+  const [taxId, setTaxId] = useState('')
+  const [street, setStreet] = useState('')
+  const [zip, setZip] = useState('')
+  const [city, setCity] = useState('')
+  const [payeeKU, setPayeeKU] = useState(true)
   const [signOn, setSignOn] = useState('me') // 'me' = jetzt hier | 'her' = Putzkraft unterschreibt selbst
   const [items, setItems] = useState(() =>
     s.services?.length
@@ -46,7 +51,11 @@ export default function AusgabeFlow() {
       const beleg = await addBeleg({
         direction: 'ausgabe', number, date: new Date().toISOString(),
         items: ci, total: ci.reduce((a, i) => a + i.price * i.qty, 0),
-        customer: { name, email: email.trim() },
+        customer: {
+          name, email: email.trim(),
+          taxId: taxId.trim(), street: street.trim(), zip: zip.trim(), city: city.trim(),
+          kleinunternehmer: payeeKU,
+        },
         payeeEmail: email.trim().toLowerCase(),
         signatureDataUrl: withSignature ? sigRef.current.toDataURL() : null,
         signerName: withSignature ? (signerName || name) : '',
@@ -58,14 +67,13 @@ export default function AusgabeFlow() {
       if (name.trim()) {
         const cur = loadSettings()
         const list = cur.payees || []
-        const idx = list.findIndex((p) => (p.name || '').toLowerCase() === name.trim().toLowerCase())
-        if (idx === -1) {
-          cur.payees = [...list, { name: name.trim(), email: email.trim() }]
-          saveSettings(cur)
-        } else if (email.trim() && !list[idx].email) {
-          cur.payees = list.map((p, i) => (i === idx ? { ...p, email: email.trim() } : p))
-          saveSettings(cur)
+        const full = {
+          name: name.trim(), email: email.trim(), taxId: taxId.trim(),
+          street: street.trim(), zip: zip.trim(), city: city.trim(), kleinunternehmer: payeeKU,
         }
+        const idx = list.findIndex((p) => (p.name || '').toLowerCase() === name.trim().toLowerCase())
+        cur.payees = idx === -1 ? [...list, full] : list.map((p, i) => (i === idx ? { ...p, ...full } : p))
+        saveSettings(cur)
       }
       try { const r = await pushBeleg(beleg); if (r.ok) await markSynced(beleg.id) } catch { /* lokal */ }
       if (!withSignature && supabase) {
@@ -120,13 +128,27 @@ export default function AusgabeFlow() {
             {(s.payees || []).length > 0 && (
               <div className="flex flex-wrap gap-2 mt-2">
                 {s.payees.map((p, i) => (
-                  <button key={i} onClick={() => { setName(p.name); if (p.email) setEmail(p.email) }}
+                  <button key={i}
+                    onClick={() => { setName(p.name || ''); setEmail(p.email || ''); setTaxId(p.taxId || ''); setStreet(p.street || ''); setZip(p.zip || ''); setCity(p.city || ''); setPayeeKU(p.kleinunternehmer !== false) }}
                     className="text-sm rounded-full px-3 py-1 border border-white/10 bg-white/5 active:scale-95 transition">
                     {p.name}
                   </button>
                 ))}
               </div>
             )}
+            <div className="mt-3 pt-3 border-t border-white/10">
+              <div className="text-white/40 text-xs mb-2">Rechnungsdaten der Putzkraft (sie ist Ausstellerin der Rechnung)</div>
+              <input value={taxId} onChange={(e) => setTaxId(e.target.value)} placeholder="Steuernummer" className={inputCls + ' mb-2'} />
+              <input value={street} onChange={(e) => setStreet(e.target.value)} placeholder="Straße & Nr." className={inputCls + ' mb-2'} />
+              <div className="grid grid-cols-3 gap-2">
+                <input value={zip} onChange={(e) => setZip(e.target.value)} placeholder="PLZ" className="bg-white/5 border border-white/10 rounded-xl px-3 py-2 outline-none focus:border-neon" />
+                <input value={city} onChange={(e) => setCity(e.target.value)} placeholder="Ort" className="col-span-2 bg-white/5 border border-white/10 rounded-xl px-3 py-2 outline-none focus:border-neon" />
+              </div>
+              <label className="flex items-center justify-between mt-2 text-sm">
+                <span className="text-white/60">Kleinunternehmer (§19, keine MwSt)</span>
+                <input type="checkbox" checked={payeeKU} onChange={(e) => setPayeeKU(e.target.checked)} className="w-5 h-5 accent-[#7c5cff]" />
+              </label>
+            </div>
           </div>
 
           <div className="glass rounded-3xl p-4">

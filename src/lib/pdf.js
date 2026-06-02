@@ -1,15 +1,24 @@
 import { jsPDF } from 'jspdf'
 import { euroPdf, dmy } from './format'
 
-// Baut eine rechtssichere (Kleinbetrags-)Rechnung/Quittung als PDF
+// Baut Rechnung/Quittung als PDF.
+// Einnahme: Aussteller = Inhaber (settings), Empfänger = Kunde.
+// Ausgabe:  Aussteller = Putzkraft (beleg.customer inkl. Steuernr.), Empfänger = Inhaber.
 export function buildInvoicePdf(beleg, s) {
   const doc = new jsPDF({ unit: 'pt', format: 'a4' })
   const M = 48
   const RIGHT = 420
   let y = 60
+  const isAus = beleg.direction === 'ausgabe'
+  const cust = beleg.customer || {}
 
-  // Logo (optional, Seitenverhältnis bleibt erhalten)
-  if (s.logoDataUrl) {
+  const issuerName = isAus ? (cust.name || 'Rechnung') : (s.businessName || 'Rechnung')
+  const issuerLines = isAus
+    ? [cust.street, [cust.zip, cust.city].filter(Boolean).join(' '), cust.taxId ? 'Steuernummer: ' + cust.taxId : '', cust.email].filter(Boolean)
+    : [s.owner, s.street, [s.zip, s.city].filter(Boolean).join(' '), s.phone, s.email].filter(Boolean)
+
+  // Logo nur bei Einnahme (Rechnung des Inhabers)
+  if (s.logoDataUrl && !isAus) {
     try {
       const p = doc.getImageProperties(s.logoDataUrl)
       const maxW = 150, maxH = 55
@@ -17,17 +26,14 @@ export function buildInvoicePdf(beleg, s) {
       if (h > maxH) { h = maxH; w = (p.width / p.height) * h }
       doc.addImage(s.logoDataUrl, p.fileType || 'PNG', M, 38, w, h)
       y = 38 + h + 18
-    } catch { /* ungueltiges Logo ignorieren */ }
+    } catch { /* ignore */ }
   }
 
   doc.setFont('helvetica', 'bold').setFontSize(20)
-  doc.text(s.businessName || 'Rechnung', M, y)
-
+  doc.text(issuerName, M, y)
   doc.setFont('helvetica', 'normal').setFontSize(10).setTextColor(90)
   y += 18
-  ;[s.owner, s.street, [s.zip, s.city].filter(Boolean).join(' '), s.phone, s.email]
-    .filter(Boolean)
-    .forEach((l) => { doc.text(String(l), M, y); y += 13 })
+  issuerLines.forEach((l) => { doc.text(String(l), M, y); y += 13 })
   doc.setTextColor(0)
 
   // Meta rechts
@@ -40,14 +46,18 @@ export function buildInvoicePdf(beleg, s) {
   // Titel
   y += 24
   doc.setFont('helvetica', 'bold').setFontSize(15)
-  doc.text(beleg.direction === 'ausgabe' ? 'Quittung (Barauszahlung)' : 'Rechnung / Barquittung', M, y)
+  doc.text(isAus ? 'Rechnung (Barauszahlung)' : 'Rechnung / Barquittung', M, y)
 
   // Empfänger
+  const recipName = isAus ? (s.businessName || '—') : (cust.name || '—')
+  const recipLines = isAus
+    ? [s.owner, s.street, [s.zip, s.city].filter(Boolean).join(' ')].filter(Boolean)
+    : [cust.email].filter(Boolean)
   y += 26
   doc.setFont('helvetica', 'bold').setFontSize(10).text('Empfänger:', M, y)
   doc.setFont('helvetica', 'normal')
-  y += 14; doc.text(beleg.customer?.name || '—', M, y)
-  if (beleg.customer?.email) { y += 13; doc.text(beleg.customer.email, M, y) }
+  y += 14; doc.text(recipName, M, y)
+  recipLines.forEach((l) => { y += 13; doc.text(String(l), M, y) })
 
   // Positionen
   y += 30
@@ -73,12 +83,14 @@ export function buildInvoicePdf(beleg, s) {
 
   doc.setFont('helvetica', 'normal').setFontSize(9).setTextColor(90)
   y += 20
-  if (beleg.taxMode === 'kleinunternehmer') {
+  const kleinunternehmer = isAus ? (cust.kleinunternehmer !== false) : (beleg.taxMode === 'kleinunternehmer')
+  if (kleinunternehmer) {
     doc.text('Gemäß §19 UStG wird keine Umsatzsteuer berechnet.', M, y); y += 13
   } else {
-    const net = beleg.total / (1 + (beleg.vatRate || 19) / 100)
+    const rate = beleg.vatRate || 19
+    const net = beleg.total / (1 + rate / 100)
     const vat = beleg.total - net
-    doc.text(`Netto: ${euroPdf(net)}   zzgl. ${beleg.vatRate || 19}% USt: ${euroPdf(vat)}`, M, y); y += 13
+    doc.text(`Netto: ${euroPdf(net)}   zzgl. ${rate}% USt: ${euroPdf(vat)}`, M, y); y += 13
   }
   doc.text('Betrag dankend in bar erhalten.', M, y); y += 20
   doc.setTextColor(0)
@@ -86,17 +98,14 @@ export function buildInvoicePdf(beleg, s) {
   // Unterschrift
   if (beleg.signatureDataUrl) {
     doc.setFontSize(9).setTextColor(90)
-    const cap = beleg.direction === 'ausgabe'
-      ? 'Unterschrift Empfänger (Bargeld erhalten):'
-      : 'Unterschrift Zahler (Bargeld übergeben):'
+    const cap = isAus ? 'Unterschrift Empfänger (Bargeld erhalten):' : 'Unterschrift Zahler (Bargeld übergeben):'
     doc.text(cap, M, y); y += 8
     try { doc.addImage(beleg.signatureDataUrl, 'PNG', M, y, 170, 64) } catch { /* ignore */ }
     y += 74
     doc.setTextColor(0).setFontSize(10)
-    doc.text(beleg.signerName || beleg.customer?.name || '', M, y)
+    doc.text(beleg.signerName || cust.name || '', M, y)
   }
 
-  // Fußzeile: Manipulationssicherheit
   doc.setFontSize(7).setTextColor(130)
   doc.text(
     `Manipulationssicher (Hash-Kette) · Hash ${String(beleg.hash || '').slice(0, 28)}… · erstellt ${beleg.createdAt || ''}`,
@@ -105,4 +114,4 @@ export function buildInvoicePdf(beleg, s) {
   return doc
 }
 
-export const pdfFileName = (beleg) => `Rechnung_${beleg.number}.pdf`
+export const pdfFileName = (beleg) => `${beleg.direction === 'ausgabe' ? 'Quittung' : 'Rechnung'}_${beleg.number}.pdf`

@@ -123,6 +123,20 @@ export default function SettingsScreen() {
             </div>
             <input value={p.email ?? ''} onChange={(e) => updPayee(i, 'email', e.target.value)} type="email" placeholder="E-Mail (für ihren Zugang)"
               className="w-full mt-1 bg-white/5 rounded-lg px-2 py-1 text-sm outline-none" />
+            <input value={p.taxId ?? ''} onChange={(e) => updPayee(i, 'taxId', e.target.value)} placeholder="Steuernummer"
+              className="w-full mt-1 bg-white/5 rounded-lg px-2 py-1 text-sm outline-none" />
+            <input value={p.street ?? ''} onChange={(e) => updPayee(i, 'street', e.target.value)} placeholder="Straße & Nr."
+              className="w-full mt-1 bg-white/5 rounded-lg px-2 py-1 text-sm outline-none" />
+            <div className="grid grid-cols-3 gap-1 mt-1">
+              <input value={p.zip ?? ''} onChange={(e) => updPayee(i, 'zip', e.target.value)} placeholder="PLZ"
+                className="bg-white/5 rounded-lg px-2 py-1 text-sm outline-none" />
+              <input value={p.city ?? ''} onChange={(e) => updPayee(i, 'city', e.target.value)} placeholder="Ort"
+                className="col-span-2 bg-white/5 rounded-lg px-2 py-1 text-sm outline-none" />
+            </div>
+            <label className="flex items-center justify-between mt-1 text-xs text-white/50">
+              <span>Kleinunternehmer §19</span>
+              <input type="checkbox" checked={p.kleinunternehmer !== false} onChange={(e) => updPayee(i, 'kleinunternehmer', e.target.checked)} className="w-4 h-4 accent-[#7c5cff]" />
+            </label>
           </div>
         ))}
         <button onClick={addPayee} className="text-sm text-aqua mt-1">+ Putzkraft hinzufügen</button>

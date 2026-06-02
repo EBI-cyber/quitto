@@ -23,6 +23,9 @@ export default function SettingsScreen() {
   const [s, setS] = useState(loadSettings())
   const [savedMsg, setSavedMsg] = useState(false)
   const upd = (k, v) => setS((p) => ({ ...p, [k]: v }))
+  const updService = (i, k, v) => setS((p) => ({ ...p, services: p.services.map((sv, idx) => (idx === i ? { ...sv, [k]: v } : sv)) }))
+  const addService = () => setS((p) => ({ ...p, services: [...(p.services || []), { label: '', price: 0 }] }))
+  const removeService = (i) => setS((p) => ({ ...p, services: p.services.filter((_, idx) => idx !== i) }))
   const save = () => {
     saveSettings(s)
     setSavedMsg(true)
@@ -69,11 +72,21 @@ export default function SettingsScreen() {
       </div>
 
       <div className="glass rounded-3xl p-4 mt-3">
-        <div className="text-white/60 font-semibold mb-2">Leistung & Preise</div>
-        <Field label="Standard-Leistung" value={s.defaultService} onChange={(v) => upd('defaultService', v)} />
-        <Field label="Standardpreis (€)" value={s.defaultPrice} onChange={(v) => upd('defaultPrice', v)} type="number" />
-        <Field label="Nachtrag-Bezeichnung" value={s.surchargeLabel} onChange={(v) => upd('surchargeLabel', v)} />
-        <Field label="Nachtrag-Preis (€)" value={s.surchargePrice} onChange={(v) => upd('surchargePrice', v)} type="number" />
+        <div className="text-white/60 font-semibold mb-2">Leistungen (Schnellauswahl)</div>
+        <div className="text-white/35 text-xs mb-3">Diese erscheinen im Einnahme-Flow als Chips zum schnellen Hinzufügen.</div>
+        {(s.services || []).map((sv, i) => (
+          <div key={i} className="flex gap-2 items-center mb-2">
+            <input value={sv.label ?? ''} onChange={(e) => updService(i, 'label', e.target.value)} placeholder="Bezeichnung"
+              className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3 py-2 outline-none focus:border-neon" />
+            <input value={sv.price ?? ''} onChange={(e) => updService(i, 'price', e.target.value)} inputMode="decimal" placeholder="€"
+              className="w-20 text-right bg-white/5 border border-white/10 rounded-xl px-2 py-2 outline-none focus:border-neon" />
+            <button onClick={() => removeService(i)} className="text-white/40 px-1 text-lg leading-none">✕</button>
+          </div>
+        ))}
+        <button onClick={addService} className="text-sm text-aqua mt-1">+ Leistung hinzufügen</button>
+      </div>
+
+      <div className="glass rounded-3xl p-4 mt-3">
         <Field label="Rechnungs-Präfix" value={s.invoicePrefix} onChange={(v) => upd('invoicePrefix', v)} />
       </div>
 

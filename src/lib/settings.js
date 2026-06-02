@@ -18,11 +18,19 @@ export const defaultSettings = {
   defaultPrice: 50,
   surchargeLabel: 'Nachtrag starke Verschmutzung',
   surchargePrice: 20,
+  services: [
+    { label: 'Wohnung gereinigt', price: 50 },
+    { label: 'Nachtrag starke Verschmutzung', price: 20 },
+  ],
 }
 
 export function loadSettings() {
   try {
-    return { ...defaultSettings, ...JSON.parse(localStorage.getItem(KEY) || '{}') }
+    const merged = { ...defaultSettings, ...JSON.parse(localStorage.getItem(KEY) || '{}') }
+    if (!Array.isArray(merged.services) || merged.services.length === 0) {
+      merged.services = defaultSettings.services
+    }
+    return merged
   } catch {
     return { ...defaultSettings }
   }

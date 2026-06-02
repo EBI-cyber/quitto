@@ -15,36 +15,41 @@ export default function EinnahmeFlow() {
   const [step, setStep] = useState('form')
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
-  const [price, setPrice] = useState(String(s.defaultPrice))
-  const [surcharge, setSurcharge] = useState(false)
+  const [items, setItems] = useState(() =>
+    s.services?.length
+      ? [{ label: s.services[0].label, qty: 1, price: Number(s.services[0].price) || 0 }]
+      : [{ label: '', qty: 1, price: 0 }]
+  )
   const [signerName, setSignerName] = useState('')
   const sigRef = useRef(null)
   const [saved, setSaved] = useState(null)
   const [busy, setBusy] = useState(false)
 
-  const items = useMemo(() => {
-    const list = [{ label: s.defaultService, qty: 1, price: Number(price) || 0 }]
-    if (surcharge) list.push({ label: s.surchargeLabel, qty: 1, price: Number(s.surchargePrice) || 0 })
-    return list
-  }, [price, surcharge, s])
-  const total = items.reduce((a, i) => a + i.price * (i.qty || 1), 0)
+  const total = items.reduce((a, i) => a + (Number(i.price) || 0) * (Number(i.qty) || 1), 0)
+
+  const addPreset = (svc) => setItems((p) => [...p, { label: svc.label, qty: 1, price: Number(svc.price) || 0 }])
+  const addCustom = () => setItems((p) => [...p, { label: '', qty: 1, price: 0 }])
+  const updItem = (idx, key, val) => setItems((p) => p.map((it, i) => (i === idx ? { ...it, [key]: val } : it)))
+  const removeItem = (idx) => setItems((p) => p.filter((_, i) => i !== idx))
 
   async function finalize() {
     if (!sigRef.current || sigRef.current.isEmpty()) { alert('Bitte unterschreiben lassen.'); return }
+    const cleanItems = items
+      .filter((it) => String(it.label).trim())
+      .map((it) => ({ label: String(it.label).trim(), qty: Number(it.qty) || 1, price: Number(it.price) || 0 }))
+    if (!cleanItems.length) { alert('Bitte mindestens eine Position mit Bezeichnung erfassen.'); return }
     setBusy(true)
     try {
       const number = await nextNumber(s.invoicePrefix, 'einnahme')
       const beleg = await addBeleg({
         direction: 'einnahme', number, date: new Date().toISOString(),
-        items, total, customer: { name, email },
+        items: cleanItems, total: cleanItems.reduce((a, i) => a + i.price * i.qty, 0),
+        customer: { name, email },
         signatureDataUrl: sigRef.current.toDataURL(),
         signerName: signerName || name, paymentMethod: 'bar',
         taxMode: s.kleinunternehmer ? 'kleinunternehmer' : 'ust', vatRate: s.vatRate,
       })
-      try {
-        const r = await pushBeleg(beleg)
-        if (r.ok) await markSynced(beleg.id)
-      } catch { /* bleibt lokal, synct später automatisch */ }
+      try { const r = await pushBeleg(beleg); if (r.ok) await markSynced(beleg.id) } catch { /* lokal, synct später */ }
       setSaved(beleg); setStep('done')
     } finally { setBusy(false) }
   }
@@ -52,6 +57,7 @@ export default function EinnahmeFlow() {
   async function doShare() { await sharePdf(buildInvoicePdf(saved, s), saved) }
 
   const inputCls = 'w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 outline-none focus:border-neon'
+  const canContinue = name.trim() && total > 0 && items.some((it) => String(it.label).trim())
 
   return (
     <div className="min-h-[100dvh] flex flex-col">
@@ -71,24 +77,44 @@ export default function EinnahmeFlow() {
             <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Name des Kunden" className={inputCls + ' mb-2'} />
             <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="E-Mail (für Rechnung, optional)" type="email" className={inputCls} />
           </div>
+
           <div className="glass rounded-3xl p-4">
-            <div className="text-white/50 text-xs mb-2">Leistung</div>
-            <div className="flex items-center justify-between">
-              <div className="font-semibold">{s.defaultService}</div>
-              <div className="flex items-center gap-1">
-                <input value={price} onChange={(e) => setPrice(e.target.value)} inputMode="decimal"
-                  className="w-20 text-right bg-white/5 border border-white/10 rounded-xl px-2 py-1 outline-none focus:border-neon" />
-                <span className="text-white/50">€</span>
-              </div>
+            <div className="text-white/50 text-xs mb-2">Positionen</div>
+            <div className="space-y-2">
+              {items.map((it, idx) => (
+                <div key={idx} className="bg-white/5 border border-white/10 rounded-xl p-2">
+                  <div className="flex gap-2 items-center">
+                    <input value={it.label} onChange={(e) => updItem(idx, 'label', e.target.value)} placeholder="Leistung"
+                      className="flex-1 bg-transparent outline-none px-1 py-1" />
+                    <button onClick={() => removeItem(idx)} className="text-white/40 px-2 text-lg leading-none">✕</button>
+                  </div>
+                  <div className="flex gap-2 items-center mt-1 text-sm">
+                    <span className="text-white/40">Menge</span>
+                    <input value={it.qty} onChange={(e) => updItem(idx, 'qty', e.target.value)} inputMode="decimal"
+                      className="w-12 text-center bg-white/5 rounded-lg px-1 py-0.5" />
+                    <span className="text-white/40 ml-auto">Preis</span>
+                    <input value={it.price} onChange={(e) => updItem(idx, 'price', e.target.value)} inputMode="decimal"
+                      className="w-20 text-right bg-white/5 rounded-lg px-1 py-0.5" />
+                    <span className="text-white/50">€</span>
+                  </div>
+                </div>
+              ))}
             </div>
-            <button onClick={() => setSurcharge((v) => !v)}
-              className={'mt-3 w-full rounded-xl px-3 py-2 text-left border transition ' + (surcharge ? 'border-acid/60 bg-acid/10' : 'border-white/10 bg-white/5')}>
-              <div className="flex items-center justify-between">
-                <span>{surcharge ? '✓ ' : ''}{s.surchargeLabel}</span>
-                <span className="text-white/60">+ {euro(s.surchargePrice)}</span>
-              </div>
-            </button>
+
+            <div className="flex flex-wrap gap-2 mt-3">
+              {s.services.map((svc, i) => (
+                <button key={i} onClick={() => addPreset(svc)}
+                  className="text-sm rounded-full px-3 py-1 border border-white/10 bg-white/5 active:scale-95 transition">
+                  + {svc.label} <span className="text-white/40">{euro(svc.price)}</span>
+                </button>
+              ))}
+              <button onClick={addCustom}
+                className="text-sm rounded-full px-3 py-1 border border-neon/40 bg-neon/10 active:scale-95 transition">
+                + Freie Position
+              </button>
+            </div>
           </div>
+
           <div className="glass rounded-3xl p-4 flex items-end justify-between">
             <div className="text-white/50 text-xs">Gesamt (bar)</div>
             <div className="text-3xl font-extrabold grad-text">{euro(total)}</div>
@@ -124,7 +150,7 @@ export default function EinnahmeFlow() {
       {step !== 'done' && (
         <div className="p-4">
           {step === 'form' ? (
-            <button disabled={!name || total <= 0} onClick={() => setStep('sign')}
+            <button disabled={!canContinue} onClick={() => setStep('sign')}
               className="w-full rounded-2xl py-4 font-bold bg-gradient-to-r from-neon to-aqua text-ink disabled:opacity-40 active:scale-[0.98] transition">
               Weiter zur Unterschrift
             </button>

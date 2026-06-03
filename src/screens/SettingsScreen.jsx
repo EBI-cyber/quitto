@@ -2,6 +2,22 @@ import { useState } from 'react'
 import { loadSettings, saveSettings } from '../lib/settings'
 import { useAuth } from '../lib/auth'
 
+// Putzkraft per E-Mail zur App einladen (öffnet Mail mit fertigem Empfänger + Text)
+async function sendCleanerInvite(name, email) {
+  const url = location.origin + import.meta.env.BASE_URL
+  const subject = 'Einladung zu Quitto'
+  const text =
+    'Hallo' + (name ? ' ' + name : '') + '! Ab jetzt bekommst du deine Bar-Quittungen digital über Quitto.\n\n' +
+    '1) Öffne ' + url + '\n' +
+    '2) Registriere dich mit genau dieser E-Mail: ' + email + '\n' +
+    '3) Du siehst dann offene Belege zum Unterschreiben und alle bisherigen Auszahlungen.\n\n' +
+    'Viele Grüße'
+  try { await navigator.clipboard.writeText(text) } catch {}
+  window.location.href = 'mailto:' + encodeURIComponent(email) +
+    '?subject=' + encodeURIComponent(subject) +
+    '&body=' + encodeURIComponent(text)
+}
+
 function Field({ label, value, onChange, type = 'text', ph }) {
   return (
     <label className="block mb-3">
@@ -123,6 +139,12 @@ export default function SettingsScreen() {
             </div>
             <input value={p.email ?? ''} onChange={(e) => updPayee(i, 'email', e.target.value)} type="email" placeholder="E-Mail (für ihren Zugang)"
               className="w-full mt-1 bg-white/5 rounded-lg px-2 py-1 text-sm outline-none" />
+            {p.email && p.email.includes('@') && (
+              <button type="button" onClick={() => sendCleanerInvite(p.name, p.email.trim())}
+                className="mt-1.5 w-full rounded-lg py-1.5 text-sm font-semibold bg-aqua/15 border border-aqua/30 text-aqua active:scale-[0.98] transition">
+                ✉ Zur App einladen
+              </button>
+            )}
             <input value={p.taxId ?? ''} onChange={(e) => updPayee(i, 'taxId', e.target.value)} placeholder="Steuernummer"
               className="w-full mt-1 bg-white/5 rounded-lg px-2 py-1 text-sm outline-none" />
             <input value={p.street ?? ''} onChange={(e) => updPayee(i, 'street', e.target.value)} placeholder="Straße & Nr."

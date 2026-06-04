@@ -20,6 +20,18 @@ function Splash() {
   )
 }
 
+// Haupt-Tabs mit Sidebar (Desktop) / Bottom-Bar (Mobile)
+function AppShell({ children }) {
+  return (
+    <div className="md:flex min-h-[100dvh]">
+      <Nav />
+      <main className="flex-1 min-w-0 pb-28 md:pb-12">
+        <div className="max-w-6xl mx-auto w-full">{children}</div>
+      </main>
+    </div>
+  )
+}
+
 function Shell() {
   const { loading, user, isCloudReady } = useAuth()
   const [role, setRole] = useState(null) // 'owner' | 'payee'
@@ -49,21 +61,16 @@ function Shell() {
   if (role === 'payee') return <MeineZahlungen />
 
   return (
-    <div className="md:flex min-h-[100dvh]">
-      <Nav />
-      <main className="flex-1 min-w-0 pb-28 md:pb-12">
-        <div className="max-w-6xl mx-auto w-full">
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/einnahme" element={<EinnahmeFlow />} />
-            <Route path="/ausgabe" element={<AusgabeFlow />} />
-            <Route path="/kassenbuch" element={<Kassenbuch />} />
-            <Route path="/cockpit" element={<Cockpit />} />
-            <Route path="/einstellungen" element={<SettingsScreen />} />
-          </Routes>
-        </div>
-      </main>
-    </div>
+    <Routes>
+      {/* Flows = fokussierte Vollbild-Aufgaben ohne untere Leiste */}
+      <Route path="/einnahme" element={<EinnahmeFlow />} />
+      <Route path="/ausgabe" element={<AusgabeFlow />} />
+      {/* Haupt-Tabs mit Shell (Sidebar/Bottom-Bar) */}
+      <Route path="/" element={<AppShell><Home /></AppShell>} />
+      <Route path="/kassenbuch" element={<AppShell><Kassenbuch /></AppShell>} />
+      <Route path="/cockpit" element={<AppShell><Cockpit /></AppShell>} />
+      <Route path="/einstellungen" element={<AppShell><SettingsScreen /></AppShell>} />
+    </Routes>
   )
 }
 

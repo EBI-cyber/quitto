@@ -4,6 +4,9 @@
 
 :root { color-scheme: dark; }
 html, body, #root { height: 100%; }
+html, body { overflow-x: hidden; }
+/* iPhone-Notch oben (Standalone-PWA) */
+#root { padding-top: env(safe-area-inset-top); }
 body {
   margin: 0;
   background:

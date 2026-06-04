@@ -253,7 +253,7 @@ export default function AusgabeFlow() {
       )}
 
       {step !== 'done' && (
-        <div className="p-4">
+        <div className="p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
           {step === 'sign' ? (
             <button disabled={busy} onClick={finalizeSelf}
               className="w-full rounded-2xl py-4 font-bold btn-grad disabled:opacity-40 active:scale-[0.98] transition">

@@ -150,7 +150,7 @@ export default function EinnahmeFlow() {
       )}
 
       {step !== 'done' && (
-        <div className="p-4">
+        <div className="p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
           {step === 'form' ? (
             <button disabled={!canContinue} onClick={() => setStep('sign')}
               className="w-full rounded-2xl py-4 font-bold btn-grad disabled:opacity-40 active:scale-[0.98] transition">

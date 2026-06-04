@@ -30,7 +30,7 @@ export default function Nav() {
       </aside>
 
       {/* Mobile: Bottom-Bar */}
-      <nav className="md:hidden fixed bottom-0 inset-x-0 z-20 px-4 pb-4 pointer-events-none">
+      <nav className="md:hidden fixed bottom-0 inset-x-0 z-20 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2 pointer-events-none">
         <div className="glass rounded-3xl grid grid-cols-4 text-center text-[11px] py-2.5 max-w-md mx-auto pointer-events-auto">
           {items.map(({ to, label, Icon, end }) => (
             <NavLink key={to} to={to} end={end}

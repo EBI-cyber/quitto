@@ -35,7 +35,7 @@ export default function Login() {
             <Receipt className="w-8 h-8" strokeWidth={2.2} />
           </div>
         </div>
-        <h1 className="text-5xl font-extrabold grad-text text-center">Quitto</h1>
+        <h1 className="text-4xl sm:text-5xl font-extrabold grad-text text-center">Quitto</h1>
         <p className="text-white/45 text-center mt-1 mb-8">{mode === 'in' ? 'Willkommen zurück' : 'Konto erstellen'}</p>
         <form onSubmit={submit} className="glass rounded-3xl p-5 space-y-3">
           <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" placeholder="E-Mail" className={inputCls} autoComplete="email" />

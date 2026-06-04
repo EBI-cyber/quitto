@@ -49,18 +49,20 @@ function Shell() {
   if (role === 'payee') return <MeineZahlungen />
 
   return (
-    <div className="min-h-[100dvh] flex flex-col max-w-md mx-auto">
-      <div className="flex-1">
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/einnahme" element={<EinnahmeFlow />} />
-          <Route path="/ausgabe" element={<AusgabeFlow />} />
-          <Route path="/kassenbuch" element={<Kassenbuch />} />
-          <Route path="/cockpit" element={<Cockpit />} />
-          <Route path="/einstellungen" element={<SettingsScreen />} />
-        </Routes>
-      </div>
+    <div className="md:flex min-h-[100dvh]">
       <Nav />
+      <main className="flex-1 min-w-0 pb-28 md:pb-12">
+        <div className="max-w-6xl mx-auto w-full">
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/einnahme" element={<EinnahmeFlow />} />
+            <Route path="/ausgabe" element={<AusgabeFlow />} />
+            <Route path="/kassenbuch" element={<Kassenbuch />} />
+            <Route path="/cockpit" element={<Cockpit />} />
+            <Route path="/einstellungen" element={<SettingsScreen />} />
+          </Routes>
+        </div>
+      </main>
     </div>
   )
 }

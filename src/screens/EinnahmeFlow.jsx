@@ -8,6 +8,8 @@ import { pushBeleg } from '../lib/cloud'
 import { buildInvoicePdf } from '../lib/pdf'
 import { sharePdf } from '../lib/share'
 import { euro } from '../lib/format'
+import { ChevronLeft, X, RotateCcw, CheckCircle2 } from 'lucide-react'
+import IconChip from '../ui/IconChip'
 
 export default function EinnahmeFlow() {
   const nav = useNavigate()
@@ -60,10 +62,10 @@ export default function EinnahmeFlow() {
   const canContinue = name.trim() && total > 0 && items.some((it) => String(it.label).trim())
 
   return (
-    <div className="min-h-[100dvh] flex flex-col">
+    <div className="min-h-[100dvh] flex flex-col max-w-xl mx-auto w-full">
       <header className="px-5 pt-8 pb-3 flex items-center gap-3">
         <button onClick={() => (step === 'form' ? nav('/') : setStep('form'))}
-          className="glass w-9 h-9 rounded-full text-lg leading-none">‹</button>
+          className="glass card-hover w-10 h-10 rounded-2xl flex items-center justify-center"><ChevronLeft className="w-5 h-5" /></button>
         <div className="font-bold text-lg">Einnahme</div>
         <div className="ml-auto text-white/40 text-sm">
           {step === 'form' ? '1 · Details' : step === 'sign' ? '2 · Unterschrift' : '3 · Fertig'}
@@ -86,7 +88,7 @@ export default function EinnahmeFlow() {
                   <div className="flex gap-2 items-center">
                     <input value={it.label} onChange={(e) => updItem(idx, 'label', e.target.value)} placeholder="Leistung"
                       className="flex-1 bg-transparent outline-none px-1 py-1" />
-                    <button onClick={() => removeItem(idx)} className="text-white/40 px-2 text-lg leading-none">✕</button>
+                    <button onClick={() => removeItem(idx)} className="text-white/35 hover:text-red-400 transition px-1"><X className="w-[18px] h-[18px]" /></button>
                   </div>
                   <div className="flex gap-2 items-center mt-1 text-sm">
                     <span className="text-white/40">Menge</span>
@@ -129,18 +131,18 @@ export default function EinnahmeFlow() {
           </div>
           <input value={signerName} onChange={(e) => setSignerName(e.target.value)} placeholder="Name (Druckbuchstaben)" className={inputCls + ' mb-2'} />
           <div className="flex-1 min-h-[220px] mb-1"><SignaturePad ref={sigRef} /></div>
-          <button onClick={() => sigRef.current?.clear()} className="text-white/50 text-sm mb-1 self-start">↺ Löschen</button>
+          <button onClick={() => sigRef.current?.clear()} className="text-white/50 text-sm mb-1 self-start inline-flex items-center gap-1"><RotateCcw className="w-4 h-4" /> Löschen</button>
         </motion.main>
       )}
 
       {step === 'done' && saved && (
         <motion.main initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }}
           className="flex-1 px-6 flex flex-col items-center justify-center text-center">
-          <div className="text-6xl mb-3">✅</div>
+          <IconChip icon={CheckCircle2} size="w-20 h-20" iconClass="w-10 h-10" variant="grad" className="mb-4" />
           <div className="text-2xl font-bold">Quittiert!</div>
           <div className="text-white/50 mt-1">Rechnung <b>{saved.number}</b> · {euro(saved.total)}</div>
           <div className="text-white/30 text-xs mt-1">Token {saved.token.slice(0, 12)} · manipulationssicher</div>
-          <button onClick={doShare} className="w-full mt-6 rounded-2xl py-3 font-bold bg-gradient-to-r from-neon to-aqua text-ink active:scale-[0.98] transition">
+          <button onClick={doShare} className="w-full mt-6 rounded-2xl py-3 font-bold btn-grad active:scale-[0.98] transition">
             Rechnung teilen / senden
           </button>
           <button onClick={() => nav('/')} className="w-full mt-2 rounded-2xl py-3 glass">Fertig</button>
@@ -151,12 +153,12 @@ export default function EinnahmeFlow() {
         <div className="p-4">
           {step === 'form' ? (
             <button disabled={!canContinue} onClick={() => setStep('sign')}
-              className="w-full rounded-2xl py-4 font-bold bg-gradient-to-r from-neon to-aqua text-ink disabled:opacity-40 active:scale-[0.98] transition">
+              className="w-full rounded-2xl py-4 font-bold btn-grad disabled:opacity-40 active:scale-[0.98] transition">
               Weiter zur Unterschrift
             </button>
           ) : (
             <button disabled={busy} onClick={finalize}
-              className="w-full rounded-2xl py-4 font-bold bg-gradient-to-r from-neon to-aqua text-ink disabled:opacity-40 active:scale-[0.98] transition">
+              className="w-full rounded-2xl py-4 font-bold btn-grad disabled:opacity-40 active:scale-[0.98] transition">
               {busy ? 'Speichere…' : 'Bargeld erhalten & quittieren'}
             </button>
           )}

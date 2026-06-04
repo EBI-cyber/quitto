@@ -6,6 +6,7 @@ import { signBelegRemote, syncAll } from '../lib/cloud'
 import { euro, dmyhm } from '../lib/format'
 import SignaturePad from '../components/SignaturePad'
 import { enablePush, pushStatus, pushSupported } from '../lib/push'
+import { ChevronLeft, Bell, PenLine, RotateCcw, ChevronRight } from 'lucide-react'
 
 export default function MeineZahlungen() {
   const { user, signOut } = useAuth()
@@ -66,7 +67,7 @@ export default function MeineZahlungen() {
     return (
       <div className="min-h-[100dvh] max-w-md mx-auto flex flex-col px-5 pt-8 pb-4">
         <div className="flex items-center gap-3 mb-2">
-          <button onClick={() => setSigning(null)} className="glass w-9 h-9 rounded-full text-lg leading-none">‹</button>
+          <button onClick={() => setSigning(null)} className="glass card-hover w-10 h-10 rounded-2xl flex items-center justify-center"><ChevronLeft className="w-5 h-5" /></button>
           <div className="font-bold text-lg">Unterschreiben</div>
         </div>
         <div className="text-white/60 text-sm mb-2">
@@ -75,9 +76,9 @@ export default function MeineZahlungen() {
         <input value={signerName} onChange={(e) => setSignerName(e.target.value)} placeholder="Name (Druckbuchstaben)"
           className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 mb-2 outline-none focus:border-neon" />
         <div className="flex-1 min-h-[240px] mb-1"><SignaturePad ref={sigRef} /></div>
-        <button onClick={() => sigRef.current?.clear()} className="text-white/50 text-sm mb-2 self-start">↺ Löschen</button>
+        <button onClick={() => sigRef.current?.clear()} className="text-white/50 text-sm mb-2 self-start inline-flex items-center gap-1"><RotateCcw className="w-4 h-4" /> Löschen</button>
         <button disabled={busy} onClick={confirmSign}
-          className="w-full rounded-2xl py-4 font-bold bg-gradient-to-r from-neon to-aqua text-ink disabled:opacity-40 active:scale-[0.98] transition">
+          className="w-full rounded-2xl py-4 font-bold btn-grad disabled:opacity-40 active:scale-[0.98] transition">
           {busy ? 'Speichere…' : 'Erhalt bestätigen & unterschreiben'}
         </button>
       </div>
@@ -95,15 +96,15 @@ export default function MeineZahlungen() {
 
       {pushSupported() && pushState !== 'on' && (
         <button onClick={turnOnPush}
-          className="w-full glass rounded-2xl py-3 mb-4 text-aqua font-semibold active:scale-[0.99] transition">
-          🔔 Benachrichtigungen aktivieren
+          className="w-full glass rounded-2xl py-3 mb-4 text-aqua font-semibold active:scale-[0.99] transition inline-flex items-center justify-center gap-2">
+          <Bell className="w-5 h-5" /> Benachrichtigungen aktivieren
         </button>
       )}
 
       {pending.length > 0 && (
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
           className="rounded-4xl p-5 mb-4 border border-neon/40 bg-neon/10">
-          <div className="text-white font-semibold mb-1">✍️ Zu unterschreiben ({pending.length})</div>
+          <div className="text-white font-semibold mb-1 flex items-center gap-2"><PenLine className="w-[18px] h-[18px]" /> Zu unterschreiben ({pending.length})</div>
           <div className="text-white/55 text-sm mb-3">Bitte den Bargeld-Erhalt bestätigen.</div>
           <div className="space-y-2">
             {pending.map((b) => (
@@ -113,7 +114,7 @@ export default function MeineZahlungen() {
                   <div className="font-semibold">{euro(b.total)}</div>
                   <div className="text-white/40 text-xs">{b.number} · {dmyhm(b.createdAt)}</div>
                 </div>
-                <div className="text-neon font-semibold text-sm">Unterschreiben →</div>
+                <div className="text-neon font-semibold text-sm flex items-center gap-1">Unterschreiben <ChevronRight className="w-4 h-4" /></div>
               </button>
             ))}
           </div>

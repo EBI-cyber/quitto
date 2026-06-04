@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { X, LogOut, Send } from 'lucide-react'
 import { loadSettings, saveSettings } from '../lib/settings'
 import { useAuth } from '../lib/auth'
 
@@ -59,8 +60,8 @@ export default function SettingsScreen() {
   }
 
   return (
-    <div className="px-6 pt-10 pb-6">
-      <h2 className="text-2xl font-bold mb-4">Einstellungen</h2>
+    <div className="px-6 md:px-8 pt-10 md:pt-12 pb-6 max-w-2xl">
+      <h2 className="text-3xl md:text-4xl font-extrabold grad-text tracking-tight mb-5">Einstellungen</h2>
 
       {isCloudReady && (
         <div className="glass rounded-3xl p-4 mb-3 flex items-center justify-between">
@@ -68,7 +69,7 @@ export default function SettingsScreen() {
             <div className="text-white/60 font-semibold">Konto (Cloud-Sync aktiv)</div>
             <div className="text-white/40 text-xs">{user?.email || 'nicht angemeldet'}</div>
           </div>
-          <button onClick={signOut} className="text-aqua text-sm px-3 py-1 rounded-lg border border-white/10">Abmelden</button>
+          <button onClick={signOut} className="text-aqua text-sm px-3 py-1.5 rounded-xl border border-white/10 inline-flex items-center gap-1.5"><LogOut className="w-4 h-4" /> Abmelden</button>
         </div>
       )}
 
@@ -121,7 +122,7 @@ export default function SettingsScreen() {
               className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3 py-2 outline-none focus:border-neon" />
             <input value={sv.price ?? ''} onChange={(e) => updService(i, 'price', e.target.value)} inputMode="decimal" placeholder="€"
               className="w-20 text-right bg-white/5 border border-white/10 rounded-xl px-2 py-2 outline-none focus:border-neon" />
-            <button onClick={() => removeService(i)} className="text-white/40 px-1 text-lg leading-none">✕</button>
+            <button onClick={() => removeService(i)} className="text-white/35 hover:text-red-400 transition px-1"><X className="w-[18px] h-[18px]" /></button>
           </div>
         ))}
         <button onClick={addService} className="text-sm text-aqua mt-1">+ Leistung hinzufügen</button>
@@ -135,14 +136,14 @@ export default function SettingsScreen() {
             <div className="flex gap-2 items-center">
               <input value={p.name ?? ''} onChange={(e) => updPayee(i, 'name', e.target.value)} placeholder="Name"
                 className="flex-1 bg-transparent outline-none px-1 py-1" />
-              <button onClick={() => removePayee(i)} className="text-white/40 px-1 text-lg leading-none">✕</button>
+              <button onClick={() => removePayee(i)} className="text-white/35 hover:text-red-400 transition px-1"><X className="w-[18px] h-[18px]" /></button>
             </div>
             <input value={p.email ?? ''} onChange={(e) => updPayee(i, 'email', e.target.value)} type="email" placeholder="E-Mail (für ihren Zugang)"
               className="w-full mt-1 bg-white/5 rounded-lg px-2 py-1 text-sm outline-none" />
             {p.email && p.email.includes('@') && (
               <button type="button" onClick={() => sendCleanerInvite(p.name, p.email.trim())}
-                className="mt-1.5 w-full rounded-lg py-1.5 text-sm font-semibold bg-aqua/15 border border-aqua/30 text-aqua active:scale-[0.98] transition">
-                ✉ Zur App einladen
+                className="mt-1.5 w-full rounded-lg py-1.5 text-sm font-semibold bg-aqua/15 border border-aqua/30 text-aqua active:scale-[0.98] transition inline-flex items-center justify-center gap-1.5">
+                <Send className="w-4 h-4" /> Zur App einladen
               </button>
             )}
             <input value={p.taxId ?? ''} onChange={(e) => updPayee(i, 'taxId', e.target.value)} placeholder="Steuernummer"
@@ -172,7 +173,7 @@ export default function SettingsScreen() {
       </div>
 
       <button onClick={save}
-        className="w-full mt-4 rounded-2xl py-3 font-bold bg-gradient-to-r from-neon to-aqua text-ink active:scale-[0.98] transition">
+        className="w-full mt-4 rounded-2xl py-3 font-bold btn-grad active:scale-[0.98] transition">
         {savedMsg ? 'Gespeichert ✓' : 'Speichern'}
       </button>
     </div>

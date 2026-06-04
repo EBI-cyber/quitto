@@ -23,6 +23,7 @@ export default function AusgabeFlow() {
   const [zip, setZip] = useState('')
   const [city, setCity] = useState('')
   const [payeeKU, setPayeeKU] = useState(true)
+  const [objekt, setObjekt] = useState('')
   const [signOn, setSignOn] = useState('me') // 'me' = jetzt hier | 'her' = Putzkraft unterschreibt selbst
   const [items, setItems] = useState(() =>
     s.services?.length
@@ -53,6 +54,7 @@ export default function AusgabeFlow() {
       const beleg = await addBeleg({
         direction: 'ausgabe', number, date: new Date().toISOString(),
         items: ci, total: ci.reduce((a, i) => a + i.price * i.qty, 0),
+        objekt: objekt.trim(),
         customer: {
           name, email: email.trim(),
           taxId: taxId.trim(), street: street.trim(), zip: zip.trim(), city: city.trim(),
@@ -75,6 +77,9 @@ export default function AusgabeFlow() {
         }
         const idx = list.findIndex((p) => (p.name || '').toLowerCase() === name.trim().toLowerCase())
         cur.payees = idx === -1 ? [...list, full] : list.map((p, i) => (i === idx ? { ...p, ...full } : p))
+        if (objekt.trim() && !(cur.objekte || []).some((o) => (o.name || '').toLowerCase() === objekt.trim().toLowerCase())) {
+          cur.objekte = [...(cur.objekte || []), { name: objekt.trim(), address: '' }]
+        }
         saveSettings(cur)
       }
       try { const r = await pushBeleg(beleg); if (r.ok) await markSynced(beleg.id) } catch { /* lokal */ }
@@ -151,6 +156,21 @@ export default function AusgabeFlow() {
                 <input type="checkbox" checked={payeeKU} onChange={(e) => setPayeeKU(e.target.checked)} className="w-5 h-5 accent-[#7c5cff]" />
               </label>
             </div>
+          </div>
+
+          <div className="glass rounded-3xl p-4">
+            <div className="text-white/50 text-xs mb-2">Wohnung / Objekt <span className="text-white/30">— was wurde gereinigt?</span></div>
+            <input value={objekt} onChange={(e) => setObjekt(e.target.value)} placeholder="z.B. Whg. Müller, Hauptstr. 5" className={inputCls} />
+            {(s.objekte || []).length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-2">
+                {s.objekte.map((o, i) => (
+                  <button key={i} type="button" onClick={() => setObjekt(o.name || '')}
+                    className={'text-sm rounded-full px-3 py-1 border transition ' + (objekt === o.name ? 'border-neon bg-neon/15 text-white' : 'border-white/10 bg-white/5 text-white/70')}>
+                    {o.name}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="glass rounded-3xl p-4">

@@ -1,10 +1,11 @@
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { useEffect, useState } from 'react'
-import { ArrowDownLeft, ArrowUpRight, TrendingUp, ChevronRight } from 'lucide-react'
+import { TrendingUp, ChevronRight } from 'lucide-react'
 import { allBelege } from '../lib/db'
 import { euro } from '../lib/format'
 import IconChip from '../ui/IconChip'
+import MoneyChip from '../ui/MoneyChip'
 
 const fade = (d = 0) => ({
   initial: { opacity: 0, y: 16 },
@@ -44,9 +45,7 @@ export default function Home() {
           <motion.button {...fade(0.1)} onClick={() => nav('/einnahme')}
             className="glass card-hover w-full rounded-4xl p-6 text-left shadow-glow active:scale-[0.98]">
             <div className="flex items-start justify-between">
-              <div className="shrink-0 w-12 h-12 rounded-xl flex items-center justify-center bg-acid/15 border border-acid/30 text-acid">
-                <ArrowDownLeft className="w-6 h-6" strokeWidth={2.2} />
-              </div>
+              <MoneyChip income size="w-12 h-12" iconClass="w-6 h-6" />
               <ChevronRight className="w-5 h-5 text-white/25 mt-1.5" />
             </div>
             <div className="text-lg sm:text-xl font-bold mt-4">Einnahme · Bargeld annehmen</div>
@@ -56,9 +55,7 @@ export default function Home() {
           <motion.button {...fade(0.18)} onClick={() => nav('/ausgabe')}
             className="glass card-hover w-full rounded-4xl p-6 text-left active:scale-[0.98]">
             <div className="flex items-start justify-between">
-              <div className="shrink-0 w-12 h-12 rounded-xl flex items-center justify-center icon-chip">
-                <ArrowUpRight className="w-6 h-6" strokeWidth={2.2} />
-              </div>
+              <MoneyChip income={false} size="w-12 h-12" iconClass="w-6 h-6" />
               <ChevronRight className="w-5 h-5 text-white/25 mt-1.5" />
             </div>
             <div className="text-lg sm:text-xl font-bold mt-4">Ausgabe · Bargeld weitergeben</div>

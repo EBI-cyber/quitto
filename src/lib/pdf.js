@@ -59,6 +59,13 @@ export function buildInvoicePdf(beleg, s) {
   y += 14; doc.text(recipName, M, y)
   recipLines.forEach((l) => { y += 13; doc.text(String(l), M, y) })
 
+  // Objekt / Wohnung (bei Rechnung)
+  if (!isAus && beleg.objekt) {
+    y += 18
+    doc.setFont('helvetica', 'bold').text('Objekt:', M, y)
+    doc.setFont('helvetica', 'normal').text(String(beleg.objekt), M + 48, y)
+  }
+
   // Positionen
   y += 30
   doc.setFont('helvetica', 'bold')

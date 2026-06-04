@@ -53,6 +53,9 @@ export default function SettingsScreen() {
   const updPayee = (i, k, v) => setS((p) => ({ ...p, payees: (p.payees || []).map((pv, idx) => (idx === i ? { ...pv, [k]: v } : pv)) }))
   const addPayee = () => setS((p) => ({ ...p, payees: [...(p.payees || []), { name: '' }] }))
   const removePayee = (i) => setS((p) => ({ ...p, payees: (p.payees || []).filter((_, idx) => idx !== i) }))
+  const updObjekt = (i, k, v) => setS((p) => ({ ...p, objekte: (p.objekte || []).map((o, idx) => (idx === i ? { ...o, [k]: v } : o)) }))
+  const addObjekt = () => setS((p) => ({ ...p, objekte: [...(p.objekte || []), { name: '', address: '' }] }))
+  const removeObjekt = (i) => setS((p) => ({ ...p, objekte: (p.objekte || []).filter((_, idx) => idx !== i) }))
   const save = () => {
     saveSettings(s)
     setSavedMsg(true)
@@ -126,6 +129,23 @@ export default function SettingsScreen() {
           </div>
         ))}
         <button onClick={addService} className="text-sm text-aqua mt-1">+ Leistung hinzufügen</button>
+      </div>
+
+      <div className="glass rounded-3xl p-4 mt-3">
+        <div className="text-white/60 font-semibold mb-2">Wohnungen / Objekte</div>
+        <div className="text-white/35 text-xs mb-3">Erscheinen bei der Rechnung zur Auswahl, welche Wohnung gereinigt wurde.</div>
+        {(s.objekte || []).map((o, i) => (
+          <div key={i} className="mb-2 bg-white/5 border border-white/10 rounded-xl p-2">
+            <div className="flex gap-2 items-center">
+              <input value={o.name ?? ''} onChange={(e) => updObjekt(i, 'name', e.target.value)} placeholder="Bezeichnung (z.B. Whg. Müller)"
+                className="flex-1 min-w-0 bg-transparent outline-none px-1 py-1" />
+              <button onClick={() => removeObjekt(i)} className="shrink-0 text-white/35 hover:text-red-400 transition px-1"><X className="w-[18px] h-[18px]" /></button>
+            </div>
+            <input value={o.address ?? ''} onChange={(e) => updObjekt(i, 'address', e.target.value)} placeholder="Adresse (optional)"
+              className="w-full mt-1 bg-white/5 rounded-lg px-2 py-1 text-sm outline-none" />
+          </div>
+        ))}
+        <button onClick={addObjekt} className="text-sm text-aqua mt-1">+ Wohnung hinzufügen</button>
       </div>
 
       <div className="glass rounded-3xl p-4 mt-3">

@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react'
-import { ArrowDownLeft, ArrowUpRight, Download } from 'lucide-react'
+import { Download } from 'lucide-react'
 import { allBelege } from '../lib/db'
 import { euro, dmyhm } from '../lib/format'
 import { buildInvoicePdf } from '../lib/pdf'
 import { sharePdf } from '../lib/share'
 import { loadSettings } from '../lib/settings'
-import IconChip from '../ui/IconChip'
+import MoneyChip from '../ui/MoneyChip'
 
 export default function Kassenbuch() {
   const [items, setItems] = useState([])
@@ -23,13 +23,13 @@ export default function Kassenbuch() {
           return (
             <button key={b.id} onClick={() => sharePdf(buildInvoicePdf(b, s), b)}
               className="glass card-hover w-full min-w-0 rounded-2xl p-4 text-left active:scale-[0.99] flex items-center gap-3">
-              <IconChip icon={ein ? ArrowDownLeft : ArrowUpRight} size="w-11 h-11" />
+              <MoneyChip income={ein} size="w-11 h-11" />
               <div className="min-w-0 flex-1">
                 <div className="font-semibold truncate">{b.customer?.name || '—'}</div>
-                <div className="text-white/40 text-xs truncate">{b.number} · {dmyhm(b.createdAt)}</div>
+                <div className="text-white/40 text-xs truncate">{[b.objekt, b.number, dmyhm(b.createdAt)].filter(Boolean).join(' · ')}</div>
               </div>
               <div className="shrink-0 text-right">
-                <div className={'font-bold whitespace-nowrap ' + (ein ? 'text-acid' : 'text-white')}>{ein ? '+' : '−'}{euro(b.total)}</div>
+                <div className={'font-bold whitespace-nowrap tabular-nums ' + (ein ? 'text-emerald-400' : 'text-rose-400')}>{ein ? '+' : '−'}{euro(b.total)}</div>
                 <div className="text-white/30 text-[11px] flex items-center justify-end gap-1"><Download className="w-3 h-3" /> PDF</div>
               </div>
             </button>

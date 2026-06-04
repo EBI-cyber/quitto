@@ -17,6 +17,7 @@ export const defaultSettings = {
   invoicePrefix: 'R',
   expensePrefix: 'A',
   payees: [],
+  objekte: [], // Wohnungen / Reinigungsobjekte (Schnellauswahl bei Rechnung)
   defaultService: 'Wohnung gereinigt',
   defaultPrice: 50,
   surchargeLabel: 'Nachtrag starke Verschmutzung',

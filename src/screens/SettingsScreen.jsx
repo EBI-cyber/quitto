@@ -119,10 +119,10 @@ export default function SettingsScreen() {
         {(s.services || []).map((sv, i) => (
           <div key={i} className="flex gap-2 items-center mb-2">
             <input value={sv.label ?? ''} onChange={(e) => updService(i, 'label', e.target.value)} placeholder="Bezeichnung"
-              className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3 py-2 outline-none focus:border-neon" />
+              className="flex-1 min-w-0 bg-white/5 border border-white/10 rounded-xl px-3 py-2 outline-none focus:border-neon" />
             <input value={sv.price ?? ''} onChange={(e) => updService(i, 'price', e.target.value)} inputMode="decimal" placeholder="€"
-              className="w-20 text-right bg-white/5 border border-white/10 rounded-xl px-2 py-2 outline-none focus:border-neon" />
-            <button onClick={() => removeService(i)} className="text-white/35 hover:text-red-400 transition px-1"><X className="w-[18px] h-[18px]" /></button>
+              className="w-16 shrink-0 text-right bg-white/5 border border-white/10 rounded-xl px-2 py-2 outline-none focus:border-neon" />
+            <button onClick={() => removeService(i)} className="shrink-0 text-white/35 hover:text-red-400 transition px-1"><X className="w-[18px] h-[18px]" /></button>
           </div>
         ))}
         <button onClick={addService} className="text-sm text-aqua mt-1">+ Leistung hinzufügen</button>
@@ -135,8 +135,8 @@ export default function SettingsScreen() {
           <div key={i} className="mb-3 bg-white/5 border border-white/10 rounded-xl p-2">
             <div className="flex gap-2 items-center">
               <input value={p.name ?? ''} onChange={(e) => updPayee(i, 'name', e.target.value)} placeholder="Name"
-                className="flex-1 bg-transparent outline-none px-1 py-1" />
-              <button onClick={() => removePayee(i)} className="text-white/35 hover:text-red-400 transition px-1"><X className="w-[18px] h-[18px]" /></button>
+                className="flex-1 min-w-0 bg-transparent outline-none px-1 py-1" />
+              <button onClick={() => removePayee(i)} className="shrink-0 text-white/35 hover:text-red-400 transition px-1"><X className="w-[18px] h-[18px]" /></button>
             </div>
             <input value={p.email ?? ''} onChange={(e) => updPayee(i, 'email', e.target.value)} type="email" placeholder="E-Mail (für ihren Zugang)"
               className="w-full mt-1 bg-white/5 rounded-lg px-2 py-1 text-sm outline-none" />

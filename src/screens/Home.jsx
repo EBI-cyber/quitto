@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { useEffect, useState } from 'react'
-import { Banknote, HandCoins, TrendingUp, ChevronRight } from 'lucide-react'
+import { ArrowDownLeft, ArrowUpRight, TrendingUp, ChevronRight } from 'lucide-react'
 import { allBelege } from '../lib/db'
 import { euro } from '../lib/format'
 import IconChip from '../ui/IconChip'
@@ -44,20 +44,24 @@ export default function Home() {
           <motion.button {...fade(0.1)} onClick={() => nav('/einnahme')}
             className="glass card-hover w-full rounded-4xl p-6 text-left shadow-glow active:scale-[0.98]">
             <div className="flex items-start justify-between">
-              <IconChip icon={Banknote} size="w-12 h-12" iconClass="w-6 h-6" variant="grad" />
+              <div className="shrink-0 w-12 h-12 rounded-xl flex items-center justify-center bg-acid/15 border border-acid/30 text-acid">
+                <ArrowDownLeft className="w-6 h-6" strokeWidth={2.2} />
+              </div>
               <ChevronRight className="w-5 h-5 text-white/25 mt-1.5" />
             </div>
-            <div className="text-xl font-bold mt-4">Einnahme · Bargeld annehmen</div>
+            <div className="text-lg sm:text-xl font-bold mt-4">Einnahme · Bargeld annehmen</div>
             <div className="text-white/50 text-sm mt-1">Kunde zahlt bar → Quittung + Rechnung + Unterschrift</div>
           </motion.button>
 
           <motion.button {...fade(0.18)} onClick={() => nav('/ausgabe')}
             className="glass card-hover w-full rounded-4xl p-6 text-left active:scale-[0.98]">
             <div className="flex items-start justify-between">
-              <IconChip icon={HandCoins} size="w-12 h-12" iconClass="w-6 h-6" />
+              <div className="shrink-0 w-12 h-12 rounded-xl flex items-center justify-center icon-chip">
+                <ArrowUpRight className="w-6 h-6" strokeWidth={2.2} />
+              </div>
               <ChevronRight className="w-5 h-5 text-white/25 mt-1.5" />
             </div>
-            <div className="text-xl font-bold mt-4">Ausgabe · Bargeld weitergeben</div>
+            <div className="text-lg sm:text-xl font-bold mt-4">Ausgabe · Bargeld weitergeben</div>
             <div className="text-white/50 text-sm mt-1">An Putzkraft auszahlen → Bestätigung + Rechnung</div>
           </motion.button>
         </div>

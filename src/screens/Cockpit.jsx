@@ -24,35 +24,35 @@ export default function Cockpit() {
 
       <div className="glass rounded-3xl p-5 mb-3 flex items-center gap-4">
         <IconChip icon={Wallet} size="w-12 h-12" iconClass="w-6 h-6" variant="grad" />
-        <div>
+        <div className="min-w-0">
           <div className="text-white/45 text-xs uppercase tracking-widest">Kassen-Saldo</div>
-          <div className={'text-4xl font-extrabold mt-0.5 ' + (stats.saldo >= 0 ? 'grad-text' : 'text-red-400')}>
+          <div className={'text-3xl sm:text-4xl font-extrabold mt-0.5 truncate ' + (stats.saldo >= 0 ? 'grad-text' : 'text-red-400')}>
             {euro(stats.saldo)}
           </div>
           <div className="text-white/35 text-xs mt-0.5">Einnahmen minus Ausgaben</div>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div className="glass rounded-3xl p-4 flex items-center gap-3">
           <IconChip icon={ArrowDownLeft} size="w-10 h-10" />
-          <div>
+          <div className="min-w-0">
             <div className="text-white/45 text-xs">Einnahmen</div>
-            <div className="text-2xl font-bold text-acid">+{euro(stats.einSum)}</div>
+            <div className="text-2xl font-bold text-acid truncate">+{euro(stats.einSum)}</div>
           </div>
         </div>
         <div className="glass rounded-3xl p-4 flex items-center gap-3">
           <IconChip icon={ArrowUpRight} size="w-10 h-10" />
-          <div>
+          <div className="min-w-0">
             <div className="text-white/45 text-xs">Ausgaben</div>
-            <div className="text-2xl font-bold text-red-400">−{euro(stats.ausSum)}</div>
+            <div className="text-2xl font-bold text-red-400 truncate">−{euro(stats.ausSum)}</div>
           </div>
         </div>
       </div>
 
       <div className="glass rounded-3xl p-4 mt-3 flex items-center gap-3">
         <IconChip icon={chain?.ok ? ShieldCheck : ShieldAlert} size="w-11 h-11" iconClass="w-[22px] h-[22px]" />
-        <div>
+        <div className="min-w-0">
           <div className="font-semibold">{chain?.ok ? 'Beleg-Kette intakt' : 'Kette geprüft'}</div>
           <div className="text-white/45 text-xs">
             {chain?.ok ? `${chain.count} Belege manipulationssicher verkettet` : `Problem bei ${chain?.brokenAt || '?'}`}
